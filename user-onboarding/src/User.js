@@ -10,6 +10,7 @@ export default function Users(props) {
         <div>
             <h2>New User: {details.name}</h2>
             <h4>Email: {details.email}</h4>
+            <h4>Password: {details.password}</h4>
         </div>
     )
 }
