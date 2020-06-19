@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import './App.css';
 import Form from './Form'
 import User from './User'
@@ -12,50 +12,78 @@ const initialFormValues = {
   name: '',
   email: '',
   password: '',
-  terms: '',
+  terms: false,
+}
+const initialErrors = {
+  ...initialFormValues,
+  terms: ''
 }
 const initialDisabled = false
 
 export default function App() {
   const [users, setUsers] = useState(initialUsers)
   const [formValues, setFormValues] = useState(initialFormValues)
-  const [error, setError] = useState('')
+  const [errors, setErrors] = useState(initialErrors)
   const [disabled, setDisabled] = useState(initialDisabled)
 
+  useEffect(() => {
+    formSchema
+    .isValid(formValues)
+    .then(valid => {
+      setDisabled(!valid);
+    })
+  },[formValues])
+  
+  const updateUsers = user => {
+    setUsers(users => [...users, user]);
+  }
+
+const createUser = (user) => {
+  axios.post("https://reqres.in/api/users", user)
+    .then(response => {
+      console.log("response", response.data)
+      updateUsers(response.data)
+    })
+    .catch(err => {
+      console.log('Error:', err)
+    })
+}
+
   const onInputChange = evt => {
-    const {name, value} = evt.target;
+    evt.persist();
+    const {name, value, checked} = evt.target;
+    
+    Yup
+    .reach(formSchema, name)
+    .validate(name === 'terms'? checked : value)
+    .then(valid => {
+      setErrors(errors => ({
+        ...errors, 
+        [name]:""
+      }));
+    })
+    .catch(err => {
+      setErrors(errors => ({
+         ...errors, 
+         [name]: err.errors[0]
+      }));
+    });
+
     setFormValues(formValues => ({
       ...formValues,
-      [name]:value,
+      [name]: name === 'terms' ? checked : value,
     }));
   }
 
-  // const onCheckboxChange = evt => {
-  //   const {name, checked } = evt.target;
-  //   setFormValues({
-  //     ...formValues,
-  //     terms:
-  //   })
-  // }
-
   const onSubmit = evt => {
     evt.preventDefault()
-    if (!formValues.name || !formValues.email || !formValues.password)
-    {
-      setError("Oops, please fill out all information.");
-    } 
-    else{
-      const newUser = {
-        name: formValues.name.trim(),
-        email: formValues.email.trim(),
-        password: formValues.password.trim()
-      }
-      setUsers(users => {
-        return [...users, newUser];
-      });
-      setError('');
-      setFormValues(initialFormValues);
+    const newUser = {
+      name: formValues.name.trim(),
+      email: formValues.email.trim(),
+      password: formValues.password.trim(),
+      terms: formValues.terms,
     }
+    createUser(newUser)
   }
 
   return (
@@ -69,10 +97,9 @@ export default function App() {
         <Form 
         values={formValues}
         onInputChange={onInputChange}
-        // onCheckboxChange={onCheckboxChange}
         onSubmit={onSubmit}
         disabled={disabled}
-        error={error}
+        errors={errors}
         />
         {users.map(user => {
           return(

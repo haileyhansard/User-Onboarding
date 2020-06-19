@@ -36,3 +36,14 @@
     transform: rotate(360deg);
   }
 }
+
+.Form{
+  display:flex;
+  flex-direction: column;
+}
+
+.FormChildren{
+  display: flex;
+  flex-direction: column;
+  color: #7d5bcc;
+}
